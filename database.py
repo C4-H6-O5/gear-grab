@@ -35,6 +35,17 @@ def update_item_status(asset_tag, new_status):
     conn = get_db_connection()
     conn.execute("UPDATE Inventory_Items SET Status = ? WHERE AssetTag = ?", (new_status, asset_tag))
     conn.commit()
+
+    # If an item is made 'Available' again, it implies any pending payments
+    # for its 'Lost' or 'Damaged' state have been resolved.
+    if new_status == 'Available':
+        # Find the latest borrowing record for this item that has an outstanding payment
+        # and mark it as resolved.
+        conn.execute('''UPDATE Borrowings 
+                        SET PaymentStatus = 'Resolved' 
+                        WHERE AssetTag = ? AND PaymentStatus IN ('Unpaid', 'Pending Assessment')''', 
+                     (asset_tag,))
+        conn.commit()
     conn.close()
 
 def borrow_item(member_id, asset_tag, is_internal):
@@ -74,7 +85,7 @@ def return_item(borrow_id, asset_tag, condition):
         new_status = "Lost"
     
     payment_status = 'N/A'
-    if condition == 'Lost':
+    if condition == 'Lost': # This is the only place 'Unpaid' is set
         payment_status = 'Unpaid'
     elif condition == 'Damaged':
         payment_status = 'Pending Assessment'
@@ -124,7 +135,7 @@ def get_unpaid_borrowings(member_id):
                           FROM Borrowings b
                           JOIN Inventory_Items i ON b.AssetTag = i.AssetTag
                           JOIN Equipment_Models m ON i.ModelID = m.ModelID
-                          WHERE b.MemberID = ? AND b.PaymentStatus IN ('Unpaid', 'Pending Assessment')''',
+                          WHERE b.MemberID = ? AND b.PaymentStatus IN ('Unpaid', 'Pending Assessment')''', # This query remains correct
                          (member_id,)).fetchall()
     conn.close()
     return items

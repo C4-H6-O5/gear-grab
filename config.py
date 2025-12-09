@@ -1,16 +1,29 @@
 # ==========================================
 # 1. MODERN ELEGANT COLOR PALETTE & CONFIG
 # ==========================================
-COLOR_BG = "#0A0A0F"           # Deep Charcoal (Professional Dark)
-COLOR_CARD = "#1A1A24"         # Slightly lighter charcoal for cards
-COLOR_ACCENT_PRIMARY = "#4CC9F0"  # Soft Cyan (BatStateU Blue-inspired)
-COLOR_ACCENT_SECONDARY = "#7209B7" # Elegant Purple
-COLOR_TEXT_WHITE = "#F8F9FA"   # Off-white for better readability
-COLOR_TEXT_GRAY = "#ADB5BD"    # Muted gray for secondary text
-COLOR_SUCCESS = "#38B000"      # Elegant Green (Available)
-COLOR_WARNING = "#FF9E00"      # Amber (Maintenance/Internal)
-COLOR_DANGER = "#FF0054"       # Modern Red (Borrowed/Lost)
-COLOR_NEUTRAL = "#4361EE"      # Blue for other statuses
+# ==========================================
+# 1. DESIGN: BATSTATEU 'CYBER-NEON' PALETTE
+# ==========================================
+# Backgrounds: Added a tiny hint of blue to the darks to make them "richer"
+COLOR_BG = "#0B0C15"           # Deepest Midnight (Better than flat charcoal)
+COLOR_CARD = "#151625"         # Rich Dark Blue-Gray (Soft separation from BG)
+
+# Accents: Kept your core identity but harmonized them
+COLOR_ACCENT_PRIMARY = "#4CC9F0"   # Soft Cyan (Your Brand Color)
+COLOR_ACCENT_SECONDARY = "#7209B7" # Elegant Purple (Depth)
+
+# Text: Cooled down the white/gray to match the dark blue background
+COLOR_TEXT_WHITE = "#F0F0F5"   # Cool White (Easier on eyes than #F8F9FA)
+COLOR_TEXT_GRAY = "#9494A8"    # Cool Muted Blue-Gray
+
+# Status Colors (The Major Fix):
+# - Success: Changed from 'Grass Green' to 'Neon Mint' to match the Cyan.
+# - Warning: Changed from 'Safety Orange' to 'Goldenrod' for less eye strain.
+# - Danger: Kept your Red, it was perfect.
+COLOR_SUCCESS = "#06D6A0"      # Neon Mint (Available) -> Matches the Cyberpunk vibe
+COLOR_WARNING = "#FFB703"      # Goldenrod (Maintenance) -> Warm but not harsh
+COLOR_DANGER = "#F72585"       # Neon Rose (Borrowed/Lost) -> Replaced Red with this vibrant Pink-Red
+COLOR_NEUTRAL = "#4895EF"      # Soft Blue (Internal Use)
 
 # Status colors mapping
 STATUS_COLORS = {
@@ -19,4 +32,17 @@ STATUS_COLORS = {
     'Internal': COLOR_WARNING,
     'Maintenance': COLOR_WARNING,
     'Lost': COLOR_DANGER
+}
+
+# Category icons mapping
+CATEGORY_ICONS = {
+    "Camera Body": "📷",
+    "Camera Lens": "🔘",
+    "Lighting": "💡",
+    "Tripods & Support": "◬",
+    "Audio & Microphones": "🎤",
+    "Drones": "🚁",
+    "Stabilizers & Gimbals": "🦾",
+    "Studio Accessories": "📦",
+    "Default": "⚙️"  # Fallback icon
 }

@@ -39,83 +39,56 @@ class LensLockerApp(ctk.CTk):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-        # Main Login Frame with elegant design
-        login_container = ctk.CTkFrame(self.container, fg_color="transparent")
-        login_container.pack(fill="both", expand=True)
-        
-        # Left side - Branding
-        brand_frame = ctk.CTkFrame(login_container, fg_color="transparent", width=400)
-        brand_frame.pack(side="left", fill="both", expand=True, padx=(0, 40))
-        
-        # Elegant Logo/Branding
-        ctk.CTkLabel(brand_frame, text="GEAR GRAB", 
-                    font=("Montserrat", 48, "bold"), 
-                    text_color=COLOR_ACCENT_PRIMARY).pack(pady=(100, 10))
-        
-        ctk.CTkLabel(brand_frame, text="BATSTATEU CAMERA CLUB", 
-                    font=("Montserrat", 18), 
-                    text_color=COLOR_TEXT_GRAY).pack(pady=(0, 40))
-        
-        # Camera Icon
-        ctk.CTkLabel(brand_frame, text="📷", font=("Montserrat", 48), text_color=COLOR_TEXT_GRAY).pack(pady=(0, 20))
-        
-        # Tagline
-        ctk.CTkLabel(brand_frame, text="Camera Club Equipment Management", 
-                    font=("Montserrat", 14), 
-                    text_color=COLOR_TEXT_GRAY).pack(pady=20)
-        
-        # Right side - Login Form
-        login_frame = ctk.CTkFrame(login_container, width=400, height=500, 
-                                  fg_color=COLOR_CARD, corner_radius=16,
-                                  border_color=COLOR_BG, border_width=1)
-        login_frame.pack(side="right", fill="both", expand=True, pady=100)
-        login_frame.pack_propagate(False)
+        # Centered Login Frame for a more focused look
+        login_frame = ctk.CTkFrame(self.container, fg_color=COLOR_CARD, corner_radius=16, width=450)
+        login_frame.place(relx=0.5, rely=0.5, anchor="center")
         
         # Form Header
-        ctk.CTkLabel(login_frame, text="Welcome Back", 
-                    font=("Montserrat", 28, "bold"), 
-                    text_color=COLOR_TEXT_WHITE).pack(pady=(50, 10))
+        ctk.CTkLabel(login_frame, text="GEAR GRAB", 
+                    font=("Montserrat", 40, "bold"), 
+                    text_color=COLOR_ACCENT_PRIMARY).pack(pady=(40, 5))
         
-        ctk.CTkLabel(login_frame, text="Sign in to access club gear", 
+        ctk.CTkLabel(login_frame, text="Focus BatStateU Camera Club", 
                     font=("Montserrat", 14), 
-                    text_color=COLOR_TEXT_GRAY).pack(pady=(0, 40))
+                    text_color=COLOR_TEXT_GRAY).pack(pady=(0, 30))
         
-        # Input Field with modern styling
-        input_frame = ctk.CTkFrame(login_frame, fg_color="transparent")
-        input_frame.pack(pady=20, padx=40)
+        # Visual Separator with Icons
+        icons_text = " · ".join(CATEGORY_ICONS.values())
+        ctk.CTkLabel(login_frame, text=icons_text, font=("Montserrat", 16), text_color=COLOR_BG).pack(pady=10)
         
-        ctk.CTkLabel(input_frame, text="Member ID", 
+        # Input Field
+        ctk.CTkLabel(login_frame, text="Member ID", 
                     font=("Montserrat", 12, "bold"), 
-                    text_color=COLOR_TEXT_GRAY).pack(anchor="w", pady=(0, 5))
+                    text_color=COLOR_TEXT_GRAY).pack(anchor="w", pady=(30, 5), padx=40)
         
-        self.entry_id = ctk.CTkEntry(input_frame, placeholder_text="Enter your member ID", 
+        self.entry_id = ctk.CTkEntry(login_frame, placeholder_text="Enter your member ID", 
                                      width=320, height=45,
                                      fg_color=COLOR_BG, 
                                      border_color=COLOR_BG,
                                      text_color=COLOR_TEXT_WHITE,
                                      font=("Montserrat", 14),
                                      corner_radius=8)
-        self.entry_id.pack(pady=(0, 20))
+        self.entry_id.pack(pady=(0, 20), padx=40)
         self.entry_id.bind('<Return>', lambda event: self.process_login())
         
         # Login Button
         btn_login = ctk.CTkButton(login_frame, text="Access System", 
                                   width=320, height=45,
                                   fg_color=COLOR_ACCENT_PRIMARY, 
-                                  text_color="white",
+                                  text_color=COLOR_BG,
                                   font=("Montserrat", 14, "bold"),
                                   corner_radius=8,
                                   hover_color=COLOR_ACCENT_SECONDARY,
                                   command=self.process_login)
-        btn_login.pack(pady=20)
+        btn_login.pack(pady=(10, 20), padx=40)
         
         # Demo hint
         hint_frame = ctk.CTkFrame(login_frame, fg_color=COLOR_BG, corner_radius=8)
-        hint_frame.pack(pady=30, padx=40, fill="x")
+        hint_frame.pack(pady=(20, 40), padx=40, fill="x")
         ctk.CTkLabel(hint_frame, text="💡 Try ID: 1 (John) or 2 (Officer Justine)", 
                     font=("Montserrat", 11), 
                     text_color=COLOR_TEXT_GRAY,
-                    pady=10).pack()
+                    pady=10).pack(padx=10)
 
     def process_login(self):
         user_input = self.entry_id.get().strip()
@@ -172,7 +145,7 @@ class LensLockerApp(ctk.CTk):
                          command=self.open_add_item_window).pack(side="left", padx=5) # This now calls the class
         
         # Add Payment Info button to header
-        ctk.CTkButton(action_frame, text="💰 Payment Info", 
+        ctk.CTkButton(action_frame, text="💰 Penalties", 
                      width=120, height=35,
                      fg_color="transparent",
                      border_color=COLOR_WARNING,
@@ -181,16 +154,6 @@ class LensLockerApp(ctk.CTk):
                      font=("Montserrat", 12),
                      corner_radius=8,
                      command=lambda: PaymentInfoWindow(self)).pack(side="left", padx=5)
-        
-        ctk.CTkButton(action_frame, text="My Borrowed Items", 
-                     width=140, height=35,
-                     fg_color="transparent",
-                     border_color=COLOR_ACCENT_PRIMARY,
-                     border_width=2,
-                     text_color=COLOR_ACCENT_PRIMARY,
-                     font=("Montserrat", 12),
-                     corner_radius=8,
-                     command=lambda: MyBorrowingsWindow(self)).pack(side="left", padx=5)
         
         ctk.CTkButton(action_frame, text="Logout", 
                      width=80, height=35,
@@ -233,10 +196,15 @@ class LensLockerApp(ctk.CTk):
         filter_container.pack(side="right", padx=(10, 0))
         filter_container.pack_propagate(False)
         
+        categories_with_icons = ["All Categories"]
+        plain_categories = ["Camera Body", "Camera Lens", "Lighting", "Tripods & Support", 
+                            "Audio & Microphones", "Drones", "Stabilizers & Gimbals", "Studio Accessories"]
+        for cat in plain_categories:
+            icon = CATEGORY_ICONS.get(cat, CATEGORY_ICONS.get("Default", ""))
+            categories_with_icons.append(f"{icon} {cat}")
+        
         self.cat_filter = ctk.CTkComboBox(filter_container, 
-                                         values=["All Categories", "Camera Body", "Camera Lens", "Lighting", 
-                                                 "Tripods & Support", "Audio & Microphones", "Drones", 
-                                                 "Stabilizers & Gimbals", "Studio Accessories"],
+                                         values=categories_with_icons,
                                          command=self.filter_inventory,
                                          width=200,
                                          height=35,
@@ -250,22 +218,26 @@ class LensLockerApp(ctk.CTk):
         self.cat_filter.set("All Categories")
         self.cat_filter.pack(pady=5, padx=10)
         
-        # --- INVENTORY CARDS AREA ---
-        self.scroll_frame = ctk.CTkScrollableFrame(self.container, fg_color="transparent")
-        self.scroll_frame.pack(fill="both", expand=True)
+        # --- MAIN CONTENT AREA (Inventory + Action Panel) ---
+        main_content_frame = ctk.CTkFrame(self.container, fg_color="transparent")
+        main_content_frame.pack(fill="both", expand=True)
         
-        # --- SELECTION ACTION BAR ---
-        self.action_bar = ctk.CTkFrame(self.container, fg_color=COLOR_CARD, corner_radius=12, height=70)
-        self.action_bar.pack(fill="x", pady=(15, 0))
+        # --- INVENTORY CARDS AREA (Left Side) ---
+        self.scroll_frame = ctk.CTkScrollableFrame(main_content_frame, fg_color="transparent")
+        self.scroll_frame.pack(side="left", fill="both", expand=True, padx=(0, 20))
+        
+        # --- SELECTION & ACTION PANEL (Right Side) ---
+        self.action_bar = ctk.CTkFrame(main_content_frame, fg_color=COLOR_CARD, corner_radius=12, width=350)
+        self.action_bar.pack(side="right", fill="y")
         self.action_bar.pack_propagate(False)
         
         # Selection info
         self.lbl_selection = ctk.CTkFrame(self.action_bar, fg_color="transparent")
-        self.lbl_selection.pack(side="left", padx=30, fill="both", expand=True)
+        self.lbl_selection.pack(fill="x", padx=30, pady=(30, 20))
         
         self.lbl_selected = ctk.CTkLabel(self.lbl_selection, 
                                         text="No equipment selected",
-                                        font=("Montserrat", 14),
+                                        font=("Montserrat", 16, "bold"),
                                         text_color=COLOR_TEXT_GRAY)
         self.lbl_selected.pack(anchor="w")
         
@@ -276,13 +248,13 @@ class LensLockerApp(ctk.CTk):
         self.lbl_status.pack(anchor="w", pady=(2, 0))
         
         # Action buttons container
-        btn_container = ctk.CTkFrame(self.action_bar, fg_color="transparent")
-        btn_container.pack(side="right", padx=30)
+        self.btn_container = ctk.CTkFrame(self.action_bar, fg_color="transparent")
+        self.btn_container.pack(fill="x", padx=30, pady=20)
         
         if self.current_user['IsOfficer']:
             # Officer-only controls
-            officer_controls = ctk.CTkFrame(btn_container, fg_color="transparent")
-            officer_controls.pack(side="left", padx=(0, 10))
+            officer_controls = ctk.CTkFrame(self.btn_container, fg_color="transparent")
+            officer_controls.pack(fill="x")
             
             self.btn_delete = ctk.CTkButton(officer_controls, text="Remove",
                                            width=100, height=35,
@@ -294,7 +266,7 @@ class LensLockerApp(ctk.CTk):
                                            state="disabled",
                                            corner_radius=8,
                                            command=self.delete_item)
-            self.btn_delete.pack(side="left", padx=5)
+            self.btn_delete.pack(fill="x", pady=(0, 10))
             
             # Status change dropdown for officers - REMOVED "Internal" option
             self.status_var = ctk.StringVar(value="Change Status")
@@ -309,31 +281,78 @@ class LensLockerApp(ctk.CTk):
                                                    text_color=COLOR_TEXT_WHITE,
                                                    state="disabled",
                                                    command=self.change_item_status)
-            self.status_dropdown.pack(side="left", padx=5)
+            self.status_dropdown.pack(fill="x", pady=(0, 20))
             
             # Keep internal use switch for borrowing
             self.internal_use_var = ctk.BooleanVar(value=False)
-            self.switch_internal = ctk.CTkSwitch(btn_container, 
+            self.switch_internal = ctk.CTkSwitch(self.btn_container, 
                                                 text="Internal Use",
                                                 variable=self.internal_use_var,
                                                 progress_color=COLOR_ACCENT_SECONDARY,
                                                 text_color=COLOR_TEXT_GRAY,
                                                 font=("Montserrat", 12))
-            self.switch_internal.pack(side="left", padx=10)
+            self.switch_internal.pack(anchor="w", pady=(0, 10))
         
         # Borrow button for all users
-        self.btn_borrow = ctk.CTkButton(btn_container, text="Borrow",
-                                       width=120, height=35,
+        self.btn_borrow = ctk.CTkButton(self.btn_container, text="Borrow",
+                                       height=45,
                                        fg_color=COLOR_ACCENT_PRIMARY,
                                        text_color="white",
-                                       font=("Montserrat", 12, "bold"),
+                                       font=("Montserrat", 14, "bold"),
                                        state="disabled",
                                        corner_radius=8,
                                        command=self.process_borrow)
-        self.btn_borrow.pack(side="left", padx=5)
+        self.btn_borrow.pack(fill="x")
+
+        # --- DIVIDER ---
+        ctk.CTkFrame(self.action_bar, height=2, fg_color=COLOR_BG).pack(fill="x", padx=30, pady=20)
+
+        # --- MY BORROWED ITEMS PANEL ---
+        ctk.CTkLabel(self.action_bar, text="My Current Borrows",
+                     font=("Montserrat", 14, "bold"),
+                     text_color=COLOR_TEXT_WHITE).pack(anchor="w", padx=30, pady=(0, 10))
+        
+        self.my_borrowings_frame = ctk.CTkScrollableFrame(self.action_bar, fg_color="transparent")
+        self.my_borrowings_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         
         # Load data
         self.load_inventory_data()
+        self.update_my_borrowings_panel()
+
+    def update_my_borrowings_panel(self):
+        """Populates the 'My Borrowed Items' panel on the dashboard."""
+        # Clear existing items
+        for widget in self.my_borrowings_frame.winfo_children():
+            widget.destroy()
+
+        items = db.get_member_borrowings(self.current_user['MemberID'])
+
+        if not items:
+            ctk.CTkLabel(self.my_borrowings_frame, text="You have no items borrowed.",
+                         font=("Montserrat", 12), text_color=COLOR_TEXT_GRAY).pack(pady=20)
+        else:
+            for item in items:
+                card = ctk.CTkFrame(self.my_borrowings_frame, fg_color=COLOR_BG, corner_radius=8)
+                card.pack(fill="x", pady=4)
+
+                info_frame = ctk.CTkFrame(card, fg_color="transparent")
+                info_frame.pack(side="left", fill="x", expand=True, padx=15, pady=10)
+
+                ctk.CTkLabel(info_frame, text=item['Name'], font=("Montserrat", 12, "bold"),
+                             text_color=COLOR_TEXT_WHITE, anchor="w").pack(anchor="w")
+
+                due_date = datetime.strptime(item['DueDate'][:10], "%Y-%m-%d")
+                is_overdue = due_date < datetime.now()
+                ctk.CTkLabel(info_frame, text=f"Due: {due_date.strftime('%b %d, %Y')}", font=("Montserrat", 11),
+                             text_color=COLOR_DANGER if is_overdue else COLOR_TEXT_GRAY,
+                             anchor="w").pack(anchor="w", pady=(2, 0))
+
+                ctk.CTkButton(card, text="Return", width=60, height=28,
+                              fg_color=COLOR_ACCENT_PRIMARY, text_color="white",
+                              font=("Montserrat", 11, "bold"),
+                              command=lambda b_id=item['BorrowID'], tag=item['AssetTag'],
+                                           name=item['Name'], cost=item['ReplacementCost']:
+                                           self._open_return_dialog(b_id, tag, name, cost)).pack(side="right", padx=15)
 
     # ============================================
     # NEW CARD DESIGN - Clean, left strip, no prices
@@ -352,7 +371,12 @@ class LensLockerApp(ctk.CTk):
         self.update_selection_display()
 
         search_text = self.search_var.get().lower()
-        cat_filter = self.cat_filter.get()
+        # Remove icon from filter value for matching
+        cat_filter_raw = self.cat_filter.get()
+        if cat_filter_raw == "All Categories":
+            cat_filter = "All Categories"
+        else:
+            cat_filter = ' '.join(cat_filter_raw.split(' ')[1:])
 
         # Create cards in a responsive grid
         cards = []
@@ -425,12 +449,12 @@ class LensLockerApp(ctk.CTk):
         
         data = self.current_selection_data
         self.lbl_selected.configure(text=f"{data['ModelName']}",
-                                   text_color=COLOR_TEXT_WHITE)
+                                   text_color=COLOR_TEXT_WHITE, font=("Montserrat", 16, "bold"))
         
         status_color = STATUS_COLORS.get(data['Status'], COLOR_TEXT_GRAY)
         self.lbl_status.configure(text=f"{data['AssetTag']} • {data['CatName']} • Status: {data['Status']}",
                                  text_color=status_color)
-
+        
     # ============================================
     # OFFICER: CHANGE ITEM STATUS
     # ============================================
@@ -458,6 +482,15 @@ class LensLockerApp(ctk.CTk):
             self.load_inventory_data()
             self.status_var.set("Change Status")
             self.status_dropdown.configure(state="disabled")
+
+    def _open_return_dialog(self, borrow_id, asset_tag, item_name, replacement_cost):
+        """Opens the return dialog and provides a callback to run on success."""
+        # The on_success callback now refreshes both the main grid and the side panel
+        dialog = MyBorrowingsWindow.ReturnDialog(self, self, borrow_id, asset_tag, item_name, replacement_cost, on_success=self._on_return_success)
+
+    def _on_return_success(self):
+        self.load_inventory_data()
+        self.update_my_borrowings_panel()
 
     # ============================================
     # ENHANCED BORROW/RETURN WITH LOST/DAMAGE FLAGGING
@@ -503,6 +536,7 @@ class LensLockerApp(ctk.CTk):
             # Refresh UI
             self.load_inventory_data()
             self.btn_borrow.configure(state="disabled", fg_color="#2A2A36")
+            self.update_my_borrowings_panel()
 
         except Exception as e:
             messagebox.showerror("System Error", f"An error occurred:\n{str(e)}")

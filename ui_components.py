@@ -54,7 +54,9 @@ class CleanCard(ctk.CTkFrame):
                      text_color=COLOR_ACCENT_PRIMARY, anchor="w").pack(anchor="w", pady=(0, 5))
         
         # Category
-        ctk.CTkLabel(content_frame, text=self.data['CatName'], font=("Montserrat", 11),
+        category_name = self.data['CatName']
+        category_icon = CATEGORY_ICONS.get(category_name, CATEGORY_ICONS.get("Default", ""))
+        ctk.CTkLabel(content_frame, text=f"{category_icon} {category_name}", font=("Montserrat", 11),
                      text_color=COLOR_TEXT_GRAY, anchor="w").pack(anchor="w", pady=(0, 15))
         
         # Purchase date
@@ -285,12 +287,13 @@ class MyBorrowingsWindow(ctk.CTkToplevel):
 
     def _open_return_dialog(self, borrow_id, asset_tag, item_name, replacement_cost):
         """Opens the return dialog and provides a callback to run on success."""
-        dialog = ReturnDialog(self, self.app, borrow_id, asset_tag, item_name, replacement_cost, on_success=self._on_return_success)
+        dialog = ReturnDialog(self, self.app, borrow_id, asset_tag, item_name, replacement_cost, on_success=self.destroy)
 
     def _on_return_success(self):
         """Callback function to close the borrowings window and refresh the main app."""
-        self.destroy()
         self.destroy() # Close the 'My Borrowings' window
+        # The main app is now responsible for refreshing its own state
+        # This keeps the component decoupled.
         self.app.load_inventory_data()
 
 
@@ -298,6 +301,8 @@ class MyBorrowingsWindow(ctk.CTkToplevel):
 # RETURN DIALOG
 # ============================================
 class ReturnDialog(ctk.CTkToplevel):
+    # Making this a nested class of MyBorrowingsWindow for organizational purposes
+    # but it could also be a standalone class.
     def __init__(self, master, app, borrow_id, asset_tag, item_name, replacement_cost, on_success=None):
         super().__init__(master)
         self.app = app
@@ -373,6 +378,9 @@ class ReturnDialog(ctk.CTkToplevel):
         if self.on_success_callback:
             self.on_success_callback()  # Trigger the parent's cleanup
 
+# Add the nested class to the parent class's namespace so it can be accessed from main.py
+MyBorrowingsWindow.ReturnDialog = ReturnDialog
+
 # ============================================
 # PAYMENT INFO WINDOW
 # ============================================
@@ -381,7 +389,7 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         super().__init__(master)
         self.app = master
 
-        self.title("Payment Information")
+        self.title("Penalties")
         self.geometry("700x600")
         self.configure(fg_color=COLOR_BG)
         self.attributes('-topmost', True)
@@ -392,7 +400,7 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         header = ctk.CTkFrame(self, fg_color=COLOR_CARD, corner_radius=12, height=100)
         header.pack(fill="x", padx=20, pady=20)
         header.pack_propagate(False)
-        ctk.CTkLabel(header, text="💰 Payment Information", font=("Montserrat", 24, "bold"),
+        ctk.CTkLabel(header, text="💰 Penalties", font=("Montserrat", 24, "bold"),
                      text_color=COLOR_TEXT_WHITE).pack(side="left", padx=30, pady=30)
         
         content_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
