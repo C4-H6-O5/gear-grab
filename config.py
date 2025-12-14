@@ -4,6 +4,9 @@
 # ==========================================
 # 1. DESIGN: BATSTATEU 'CYBER-NEON' PALETTE
 # ==========================================
+
+APP_NAME = "Gear Grab"
+
 # Backgrounds: Added a tiny hint of blue to the darks to make them "richer"
 COLOR_BG = "#0B0C15"           # Deepest Midnight (Better than flat charcoal)
 COLOR_CARD = "#151625"         # Rich Dark Blue-Gray (Soft separation from BG)

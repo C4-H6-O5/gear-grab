@@ -1,17 +1,19 @@
 import customtkinter as ctk
 from tkinter import messagebox, ttk
 from datetime import datetime, timedelta
+import os
 
 # Refactored imports
 import database as db
 from config import *
 from ui_components import CleanCard, AddItemWindow, MyBorrowingsWindow, PaymentInfoWindow
+from setup import setup_database
 
 # Configure Global Theme
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 
-class LensLockerApp(ctk.CTk):
+class GearGrabApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
@@ -54,7 +56,7 @@ class LensLockerApp(ctk.CTk):
         
         # Visual Separator with Icons
         icons_text = " · ".join(CATEGORY_ICONS.values())
-        ctk.CTkLabel(login_frame, text=icons_text, font=("Montserrat", 16), text_color=COLOR_BG).pack(pady=10)
+        ctk.CTkLabel(login_frame, text=icons_text, font=("Montserrat", 16), text_color="#333445").pack(pady=10)
         
         # Input Field
         ctk.CTkLabel(login_frame, text="Member ID", 
@@ -85,7 +87,7 @@ class LensLockerApp(ctk.CTk):
         # Demo hint
         hint_frame = ctk.CTkFrame(login_frame, fg_color=COLOR_BG, corner_radius=8)
         hint_frame.pack(pady=(20, 40), padx=40, fill="x")
-        ctk.CTkLabel(hint_frame, text="💡 Try ID: 1 (John) or 2 (Officer Justine)", 
+        ctk.CTkLabel(hint_frame, text="💡 Try ID: 1 (Juan DelaCruz) or 2 (Officer Mhalik Perez)", 
                     font=("Montserrat", 11), 
                     text_color=COLOR_TEXT_GRAY,
                     pady=10).pack(padx=10)
@@ -258,11 +260,9 @@ class LensLockerApp(ctk.CTk):
             
             self.btn_delete = ctk.CTkButton(officer_controls, text="Remove",
                                            width=100, height=35,
-                                           fg_color="transparent",
-                                           border_color=COLOR_BG,
-                                           border_width=1,
-                                           text_color=COLOR_TEXT_GRAY,
-                                           font=("Montserrat", 12),
+                                           fg_color="#252635",
+                                           text_color="#707080",
+                                           font=("Montserrat", 12, "bold"),
                                            state="disabled",
                                            corner_radius=8,
                                            command=self.delete_item)
@@ -296,13 +296,14 @@ class LensLockerApp(ctk.CTk):
         # Borrow button for all users
         self.btn_borrow = ctk.CTkButton(self.btn_container, text="Borrow",
                                        height=45,
-                                       fg_color=COLOR_ACCENT_PRIMARY,
-                                       text_color="white",
+                                       fg_color=COLOR_ACCENT_PRIMARY, 
+                                       text_color=COLOR_BG,
                                        font=("Montserrat", 14, "bold"),
                                        state="disabled",
                                        corner_radius=8,
                                        command=self.process_borrow)
-        self.btn_borrow.pack(fill="x")
+        self.btn_borrow.configure(fg_color="#252635", text_color="#707080") # Set initial disabled colors
+        self.btn_borrow.pack(fill="x") 
 
         # --- DIVIDER ---
         ctk.CTkFrame(self.action_bar, height=2, fg_color=COLOR_BG).pack(fill="x", padx=30, pady=20)
@@ -348,7 +349,7 @@ class LensLockerApp(ctk.CTk):
                              anchor="w").pack(anchor="w", pady=(2, 0))
 
                 ctk.CTkButton(card, text="Return", width=60, height=28,
-                              fg_color=COLOR_ACCENT_PRIMARY, text_color="white",
+                              fg_color=COLOR_ACCENT_PRIMARY, text_color=COLOR_BG,
                               font=("Montserrat", 11, "bold"),
                               command=lambda b_id=item['BorrowID'], tag=item['AssetTag'],
                                            name=item['Name'], cost=item['ReplacementCost']:
@@ -426,16 +427,16 @@ class LensLockerApp(ctk.CTk):
         if data['Status'] == 'Available':
             self.btn_borrow.configure(state="normal", 
                                      fg_color=COLOR_ACCENT_PRIMARY,
-                                     text_color="white")
+                                     text_color=COLOR_BG)
         else:
             self.btn_borrow.configure(state="disabled", 
-                                     fg_color="#2A2A36",
-                                     text_color=COLOR_TEXT_GRAY)
+                                     fg_color="#252635",
+                                     text_color="#707080")
         
         if self.current_user['IsOfficer']:
             self.btn_delete.configure(state="normal",
-                                     text_color="white",
                                      fg_color=COLOR_DANGER,
+                                     text_color=COLOR_BG,
                                      border_width=0)
             self.status_dropdown.configure(state="normal")
 
@@ -535,7 +536,7 @@ class LensLockerApp(ctk.CTk):
             
             # Refresh UI
             self.load_inventory_data()
-            self.btn_borrow.configure(state="disabled", fg_color="#2A2A36")
+            self.btn_borrow.configure(state="disabled", fg_color="#252635", text_color="#707080")
             self.update_my_borrowings_panel()
 
         except Exception as e:
@@ -574,5 +575,10 @@ class LensLockerApp(ctk.CTk):
         AddItemWindow(self)
 
 if __name__ == "__main__":
-    app = LensLockerApp()
+    # Check if database exists or is empty, and initialize if needed
+    if not os.path.exists('geargrab.db') or os.path.getsize('geargrab.db') == 0:
+        print("Database not found or empty. Initializing...")
+        setup_database()
+
+    app = GearGrabApp()
     app.mainloop()

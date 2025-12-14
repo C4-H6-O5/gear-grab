@@ -2,7 +2,7 @@ import sqlite3
 import os
 
 def setup_database():
-    db_filename = 'lenslocker.db'
+    db_filename = 'geargrab.db'
     schema_filename = 'schema.sql'
 
     # Check if schema file exists

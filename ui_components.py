@@ -280,7 +280,7 @@ class MyBorrowingsWindow(ctk.CTkToplevel):
                 btn_frame.pack(side="right", fill="y", pady=20)
                 
                 ctk.CTkButton(btn_frame, text="Return", width=100, fg_color=COLOR_ACCENT_PRIMARY,
-                              text_color="white", font=("Montserrat", 12, "bold"),
+                              text_color=COLOR_BG, font=("Montserrat", 12, "bold"),
                               command=lambda b_id=item['BorrowID'], tag=item['AssetTag'], 
                                            name=item['Name'], cost=item['ReplacementCost']: 
                                            self._open_return_dialog(b_id, tag, name, cost)).pack()
@@ -349,7 +349,7 @@ class ReturnDialog(ctk.CTkToplevel):
             ctk.CTkLabel(frame, text=desc, text_color=COLOR_TEXT_GRAY, font=("Montserrat", 11)).pack(side="left")
         
         ctk.CTkButton(self, text="Confirm Return", width=200, height=45, fg_color=COLOR_ACCENT_PRIMARY,
-                      text_color="white", font=("Montserrat", 14, "bold"), corner_radius=8,
+                      text_color=COLOR_BG, font=("Montserrat", 14, "bold"), corner_radius=8,
                       command=self._process_return).pack(pady=30)
 
     def _process_return(self):
@@ -489,7 +489,7 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         
         # Close button
         close_btn = ctk.CTkButton(self, text="Close Window", width=200, height=40,
-                                  fg_color=COLOR_ACCENT_PRIMARY, text_color="white",
+                                  fg_color=COLOR_ACCENT_PRIMARY, text_color=COLOR_BG,
                                   font=("Montserrat", 14, "bold"), corner_radius=8,
                                   command=self.destroy)
         close_btn.pack(pady=(10, 20))
@@ -498,5 +498,5 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         footer_frame = ctk.CTkFrame(self, fg_color=COLOR_CARD, corner_radius=12, height=60)
         footer_frame.pack(fill="x", padx=20, pady=(0, 20))
         footer_frame.pack_propagate(False)
-        ctk.CTkLabel(footer_frame, text="For questions, contact: focus-batstateu@example.com",
+        ctk.CTkLabel(footer_frame, text="For questions, contact: focus.cameraclub@school.edu",
                      font=("Montserrat", 11), text_color=COLOR_TEXT_GRAY).pack(expand=True)

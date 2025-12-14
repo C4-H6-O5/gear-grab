@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timedelta
 
-DB_NAME = 'lenslocker.db'
+DB_NAME = 'geargrab.db'
 
 def get_db_connection():
     """Establishes a connection to the database."""
