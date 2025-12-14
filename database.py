@@ -36,11 +36,7 @@ def update_item_status(asset_tag, new_status):
     conn.execute("UPDATE Inventory_Items SET Status = ? WHERE AssetTag = ?", (new_status, asset_tag))
     conn.commit()
 
-    # If an item is made 'Available' again, it implies any pending payments
-    # for its 'Lost' or 'Damaged' state have been resolved.
     if new_status == 'Available':
-        # Find the latest borrowing record for this item that has an outstanding payment
-        # and mark it as resolved.
         conn.execute('''UPDATE Borrowings 
                         SET PaymentStatus = 'Resolved' 
                         WHERE AssetTag = ? AND PaymentStatus IN ('Unpaid', 'Pending Assessment')''', 
@@ -51,9 +47,12 @@ def update_item_status(asset_tag, new_status):
 def borrow_item(member_id, asset_tag, is_internal):
     """Creates a new borrowing record and updates the item's status."""
     conn = get_db_connection()
-    days = 0 if is_internal else 3
-    due_date = datetime.now() + timedelta(days=days)
-    new_status = 'Internal' if is_internal else 'Borrowed'
+    if is_internal:
+        due_date = None
+        new_status = 'Internal'
+    else:
+        due_date = datetime.now() + timedelta(days=3)
+        new_status = 'Borrowed'
 
     conn.execute("INSERT INTO Borrowings (MemberID, AssetTag, DueDate) VALUES (?, ?, ?)", 
                   (member_id, asset_tag, due_date))
@@ -85,10 +84,10 @@ def return_item(borrow_id, asset_tag, condition):
         new_status = "Lost"
     
     payment_status = 'N/A'
-    if condition == 'Lost': # This is the only place 'Unpaid' is set
+    if condition == 'Lost':
         payment_status = 'Unpaid'
     elif condition == 'Damaged':
-        payment_status = 'Pending Assessment'
+        payment_status = 'Unpaid'
 
     conn = get_db_connection()
     conn.execute("UPDATE Borrowings SET DateReturned = CURRENT_TIMESTAMP, ReturnCondition = ?, PaymentStatus = ? WHERE BorrowID = ?",
@@ -131,11 +130,11 @@ def get_officers():
 def get_unpaid_borrowings(member_id):
     """Fetches all borrowings for a member that have an outstanding payment."""
     conn = get_db_connection()
-    items = conn.execute('''SELECT b.AssetTag, m.Name, m.ReplacementCost, b.PaymentStatus
+    items = conn.execute('''SELECT b.AssetTag, m.Name, m.ReplacementCost, b.PaymentStatus, b.ReturnCondition
                           FROM Borrowings b
                           JOIN Inventory_Items i ON b.AssetTag = i.AssetTag
                           JOIN Equipment_Models m ON i.ModelID = m.ModelID
-                          WHERE b.MemberID = ? AND b.PaymentStatus IN ('Unpaid', 'Pending Assessment')''', # This query remains correct
+                          WHERE b.MemberID = ? AND b.PaymentStatus IN ('Unpaid', 'Pending Assessment')''',
                          (member_id,)).fetchall()
     conn.close()
     return items

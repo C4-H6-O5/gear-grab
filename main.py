@@ -3,13 +3,11 @@ from tkinter import messagebox, ttk
 from datetime import datetime, timedelta
 import os
 
-# Refactored imports
 import database as db
 from config import *
 from ui_components import CleanCard, AddItemWindow, MyBorrowingsWindow, PaymentInfoWindow
 from setup import setup_database
 
-# Configure Global Theme
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("dark-blue")
 
@@ -21,31 +19,24 @@ class GearGrabApp(ctk.CTk):
         self.geometry("1300x850")
         self.minsize(1100, 700)
         
-        # Apply Background Color
         self.configure(fg_color=COLOR_BG)
 
         self.current_user = None
         self.selected_card_widget = None
         self.current_selection_data = None
 
-        # Main Container
         self.container = ctk.CTkFrame(self, fg_color="transparent")
         self.container.pack(fill="both", expand=True, padx=25, pady=25)
 
         self.show_login_screen()
 
-    # ============================================
-    # SCREEN 1: ELEGANT LOGIN
-    # ============================================
     def show_login_screen(self):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-        # Centered Login Frame for a more focused look
         login_frame = ctk.CTkFrame(self.container, fg_color=COLOR_CARD, corner_radius=16, width=450)
         login_frame.place(relx=0.5, rely=0.5, anchor="center")
         
-        # Form Header
         ctk.CTkLabel(login_frame, text="GEAR GRAB", 
                     font=("Montserrat", 40, "bold"), 
                     text_color=COLOR_ACCENT_PRIMARY).pack(pady=(40, 5))
@@ -54,11 +45,9 @@ class GearGrabApp(ctk.CTk):
                     font=("Montserrat", 14), 
                     text_color=COLOR_TEXT_GRAY).pack(pady=(0, 30))
         
-        # Visual Separator with Icons
         icons_text = " · ".join(CATEGORY_ICONS.values())
         ctk.CTkLabel(login_frame, text=icons_text, font=("Montserrat", 16), text_color="#333445").pack(pady=10)
         
-        # Input Field
         ctk.CTkLabel(login_frame, text="Member ID", 
                     font=("Montserrat", 12, "bold"), 
                     text_color=COLOR_TEXT_GRAY).pack(anchor="w", pady=(30, 5), padx=40)
@@ -73,7 +62,6 @@ class GearGrabApp(ctk.CTk):
         self.entry_id.pack(pady=(0, 20), padx=40)
         self.entry_id.bind('<Return>', lambda event: self.process_login())
         
-        # Login Button
         btn_login = ctk.CTkButton(login_frame, text="Access System", 
                                   width=320, height=45,
                                   fg_color=COLOR_ACCENT_PRIMARY, 
@@ -84,7 +72,6 @@ class GearGrabApp(ctk.CTk):
                                   command=self.process_login)
         btn_login.pack(pady=(10, 20), padx=40)
         
-        # Demo hint
         hint_frame = ctk.CTkFrame(login_frame, fg_color=COLOR_BG, corner_radius=8)
         hint_frame.pack(pady=(20, 40), padx=40, fill="x")
         ctk.CTkLabel(hint_frame, text="💡 Try ID: 1 (Juan DelaCruz) or 2 (Officer Mhalik Perez)", 
@@ -106,18 +93,13 @@ class GearGrabApp(ctk.CTk):
         else:
             messagebox.showerror("Error", "Member ID not found.")
 
-    # ============================================
-    # SCREEN 2: MODERN DASHBOARD
-    # ============================================
     def show_dashboard_screen(self):
         for widget in self.container.winfo_children():
             widget.destroy()
 
-        # --- HEADER ---
         header_frame = ctk.CTkFrame(self.container, fg_color=COLOR_CARD, corner_radius=12)
         header_frame.pack(fill="x", pady=(0, 20))
         
-        # User info
         user_info = ctk.CTkFrame(header_frame, fg_color="transparent")
         user_info.pack(side="left", padx=30, pady=15)
         
@@ -133,7 +115,6 @@ class GearGrabApp(ctk.CTk):
                     font=("Montserrat", 12),
                     text_color=role_color).pack(anchor="w", pady=(2, 0))
         
-        # Action buttons
         action_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
         action_frame.pack(side="right", padx=30, pady=15)
         
@@ -144,9 +125,8 @@ class GearGrabApp(ctk.CTk):
                          text_color="white",
                          font=("Montserrat", 12, "bold"),
                          corner_radius=8,
-                         command=self.open_add_item_window).pack(side="left", padx=5) # This now calls the class
+                         command=self.open_add_item_window).pack(side="left", padx=5)
         
-        # Add Payment Info button to header
         ctk.CTkButton(action_frame, text="💰 Penalties", 
                      width=120, height=35,
                      fg_color="transparent",
@@ -167,11 +147,9 @@ class GearGrabApp(ctk.CTk):
                      corner_radius=8,
                      command=self.logout).pack(side="left", padx=5)
         
-        # --- SEARCH & FILTER ---
         filter_frame = ctk.CTkFrame(self.container, fg_color="transparent")
         filter_frame.pack(fill="x", pady=(0, 15))
         
-        # Search bar
         search_container = ctk.CTkFrame(filter_frame, fg_color=COLOR_CARD, corner_radius=8, height=45)
         search_container.pack(side="left", fill="x", expand=True, padx=(0, 10))
         search_container.pack_propagate(False)
@@ -193,7 +171,6 @@ class GearGrabApp(ctk.CTk):
                                    height=45)
         search_entry.pack(side="left", fill="x", expand=True, padx=(0, 10))
         
-        # Category filter
         filter_container = ctk.CTkFrame(filter_frame, fg_color=COLOR_CARD, corner_radius=8, height=45)
         filter_container.pack(side="right", padx=(10, 0))
         filter_container.pack_propagate(False)
@@ -220,20 +197,16 @@ class GearGrabApp(ctk.CTk):
         self.cat_filter.set("All Categories")
         self.cat_filter.pack(pady=5, padx=10)
         
-        # --- MAIN CONTENT AREA (Inventory + Action Panel) ---
         main_content_frame = ctk.CTkFrame(self.container, fg_color="transparent")
         main_content_frame.pack(fill="both", expand=True)
         
-        # --- INVENTORY CARDS AREA (Left Side) ---
         self.scroll_frame = ctk.CTkScrollableFrame(main_content_frame, fg_color="transparent")
         self.scroll_frame.pack(side="left", fill="both", expand=True, padx=(0, 20))
         
-        # --- SELECTION & ACTION PANEL (Right Side) ---
         self.action_bar = ctk.CTkFrame(main_content_frame, fg_color=COLOR_CARD, corner_radius=12, width=350)
         self.action_bar.pack(side="right", fill="y")
         self.action_bar.pack_propagate(False)
         
-        # Selection info
         self.lbl_selection = ctk.CTkFrame(self.action_bar, fg_color="transparent")
         self.lbl_selection.pack(fill="x", padx=30, pady=(30, 20))
         
@@ -249,12 +222,10 @@ class GearGrabApp(ctk.CTk):
                                       text_color=COLOR_TEXT_GRAY)
         self.lbl_status.pack(anchor="w", pady=(2, 0))
         
-        # Action buttons container
         self.btn_container = ctk.CTkFrame(self.action_bar, fg_color="transparent")
         self.btn_container.pack(fill="x", padx=30, pady=20)
         
         if self.current_user['IsOfficer']:
-            # Officer-only controls
             officer_controls = ctk.CTkFrame(self.btn_container, fg_color="transparent")
             officer_controls.pack(fill="x")
             
@@ -268,10 +239,9 @@ class GearGrabApp(ctk.CTk):
                                            command=self.delete_item)
             self.btn_delete.pack(fill="x", pady=(0, 10))
             
-            # Status change dropdown for officers - REMOVED "Internal" option
             self.status_var = ctk.StringVar(value="Change Status")
             self.status_dropdown = ctk.CTkOptionMenu(officer_controls,
-                                                   values=["Available", "Maintenance", "Lost"],  # Removed "Internal"
+                                                   values=["Available", "Maintenance", "Lost"],
                                                    variable=self.status_var,
                                                    width=140,
                                                    height=35,
@@ -283,7 +253,6 @@ class GearGrabApp(ctk.CTk):
                                                    command=self.change_item_status)
             self.status_dropdown.pack(fill="x", pady=(0, 20))
             
-            # Keep internal use switch for borrowing
             self.internal_use_var = ctk.BooleanVar(value=False)
             self.switch_internal = ctk.CTkSwitch(self.btn_container, 
                                                 text="Internal Use",
@@ -293,7 +262,6 @@ class GearGrabApp(ctk.CTk):
                                                 font=("Montserrat", 12))
             self.switch_internal.pack(anchor="w", pady=(0, 10))
         
-        # Borrow button for all users
         self.btn_borrow = ctk.CTkButton(self.btn_container, text="Borrow",
                                        height=45,
                                        fg_color=COLOR_ACCENT_PRIMARY, 
@@ -302,13 +270,11 @@ class GearGrabApp(ctk.CTk):
                                        state="disabled",
                                        corner_radius=8,
                                        command=self.process_borrow)
-        self.btn_borrow.configure(fg_color="#252635", text_color="#707080") # Set initial disabled colors
+        self.btn_borrow.configure(fg_color="#252635", text_color="#707080")
         self.btn_borrow.pack(fill="x") 
 
-        # --- DIVIDER ---
         ctk.CTkFrame(self.action_bar, height=2, fg_color=COLOR_BG).pack(fill="x", padx=30, pady=20)
 
-        # --- MY BORROWED ITEMS PANEL ---
         ctk.CTkLabel(self.action_bar, text="My Current Borrows",
                      font=("Montserrat", 14, "bold"),
                      text_color=COLOR_TEXT_WHITE).pack(anchor="w", padx=30, pady=(0, 10))
@@ -316,13 +282,11 @@ class GearGrabApp(ctk.CTk):
         self.my_borrowings_frame = ctk.CTkScrollableFrame(self.action_bar, fg_color="transparent")
         self.my_borrowings_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         
-        # Load data
         self.load_inventory_data()
         self.update_my_borrowings_panel()
 
     def update_my_borrowings_panel(self):
         """Populates the 'My Borrowed Items' panel on the dashboard."""
-        # Clear existing items
         for widget in self.my_borrowings_frame.winfo_children():
             widget.destroy()
 
@@ -342,10 +306,17 @@ class GearGrabApp(ctk.CTk):
                 ctk.CTkLabel(info_frame, text=item['Name'], font=("Montserrat", 12, "bold"),
                              text_color=COLOR_TEXT_WHITE, anchor="w").pack(anchor="w")
 
-                due_date = datetime.strptime(item['DueDate'][:10], "%Y-%m-%d")
-                is_overdue = due_date < datetime.now()
-                ctk.CTkLabel(info_frame, text=f"Due: {due_date.strftime('%b %d, %Y')}", font=("Montserrat", 11),
-                             text_color=COLOR_DANGER if is_overdue else COLOR_TEXT_GRAY,
+                if item['DueDate']:
+                    due_date = datetime.strptime(item['DueDate'][:10], "%Y-%m-%d")
+                    is_overdue = due_date < datetime.now()
+                    due_text = f"Due: {due_date.strftime('%b %d, %Y')}"
+                    due_color = COLOR_DANGER if is_overdue else COLOR_TEXT_GRAY
+                else:
+                    due_text = "Internal Use"
+                    due_color = COLOR_ACCENT_SECONDARY
+
+                ctk.CTkLabel(info_frame, text=due_text, font=("Montserrat", 11),
+                             text_color=due_color,
                              anchor="w").pack(anchor="w", pady=(2, 0))
 
                 ctk.CTkButton(card, text="Return", width=60, height=28,
@@ -355,15 +326,11 @@ class GearGrabApp(ctk.CTk):
                                            name=item['Name'], cost=item['ReplacementCost']:
                                            self._open_return_dialog(b_id, tag, name, cost)).pack(side="right", padx=15)
 
-    # ============================================
-    # NEW CARD DESIGN - Clean, left strip, no prices
-    # ============================================
     def load_inventory_data(self):
         self.all_inventory = db.get_all_inventory()
         self.filter_inventory()
 
     def filter_inventory(self, *args):
-        # Clear existing cards
         for widget in self.scroll_frame.winfo_children():
             widget.destroy()
         
@@ -372,14 +339,12 @@ class GearGrabApp(ctk.CTk):
         self.update_selection_display()
 
         search_text = self.search_var.get().lower()
-        # Remove icon from filter value for matching
         cat_filter_raw = self.cat_filter.get()
         if cat_filter_raw == "All Categories":
             cat_filter = "All Categories"
         else:
             cat_filter = ' '.join(cat_filter_raw.split(' ')[1:])
 
-        # Create cards in a responsive grid
         cards = []
         for row_data in self.all_inventory:
             match_search = search_text in row_data['ModelName'].lower() or search_text in row_data['AssetTag'].lower()
@@ -388,12 +353,10 @@ class GearGrabApp(ctk.CTk):
             if match_search and match_cat:
                 cards.append(row_data)
 
-        # Create grid - use 4 columns by default
         cols = 4
         for i in range(cols):
             self.scroll_frame.grid_columnconfigure(i, weight=1)
 
-        # Create cards in grid
         row, col = 0, 0
         for data in cards:
             self.create_clean_card(data, row, col)
@@ -403,27 +366,21 @@ class GearGrabApp(ctk.CTk):
                 row += 1
 
     def create_clean_card(self, data, row, col):
-        # Get status color and icon
         status_color = STATUS_COLORS.get(data['Status'], COLOR_NEUTRAL)
         CleanCard(self.scroll_frame, data, row, col, self)
 
     def select_card(self, data, card_container):
-        # Reset all cards to normal state
         for child in self.scroll_frame.winfo_children():
             if isinstance(child, CleanCard):
                 child.deselect()
         
-        # Mark as selected with full card color change
         card_container.select()
         
-        # Store selection
         self.selected_card_widget = card_container
         self.current_selection_data = data
         
-        # Update selection display
         self.update_selection_display()
         
-        # Enable/disable buttons based on status
         if data['Status'] == 'Available':
             self.btn_borrow.configure(state="normal", 
                                      fg_color=COLOR_ACCENT_PRIMARY,
@@ -456,9 +413,6 @@ class GearGrabApp(ctk.CTk):
         self.lbl_status.configure(text=f"{data['AssetTag']} • {data['CatName']} • Status: {data['Status']}",
                                  text_color=status_color)
         
-    # ============================================
-    # OFFICER: CHANGE ITEM STATUS
-    # ============================================
     def change_item_status(self, new_status):
         if not self.current_selection_data:
             return
@@ -469,7 +423,6 @@ class GearGrabApp(ctk.CTk):
         if new_status == current_status:
             return
         
-        # Confirmation
         confirm = messagebox.askyesno("Change Status",
                                      f"Change {asset_tag} from '{current_status}' to '{new_status}'?")
         
@@ -479,23 +432,18 @@ class GearGrabApp(ctk.CTk):
             messagebox.showinfo("Status Updated", 
                               f"✅ {asset_tag} status changed to '{new_status}'")
             
-            # Refresh UI
             self.load_inventory_data()
             self.status_var.set("Change Status")
             self.status_dropdown.configure(state="disabled")
 
     def _open_return_dialog(self, borrow_id, asset_tag, item_name, replacement_cost):
         """Opens the return dialog and provides a callback to run on success."""
-        # The on_success callback now refreshes both the main grid and the side panel
         dialog = MyBorrowingsWindow.ReturnDialog(self, self, borrow_id, asset_tag, item_name, replacement_cost, on_success=self._on_return_success)
 
     def _on_return_success(self):
         self.load_inventory_data()
         self.update_my_borrowings_panel()
 
-    # ============================================
-    # ENHANCED BORROW/RETURN WITH LOST/DAMAGE FLAGGING
-    # ============================================
     def process_borrow(self):
         if not self.current_selection_data:
             return
@@ -508,33 +456,29 @@ class GearGrabApp(ctk.CTk):
             is_internal = self.internal_use_var.get()
 
         try:
-            conn = db.get_db_connection() # Keep connection for multiple checks
+            conn = db.get_db_connection()
             cursor = conn.cursor()
-            # Check for overdue items
             overdue = cursor.execute('''SELECT COUNT(*) FROM Borrowings WHERE MemberID = ? AND DateReturned IS NULL AND DueDate < datetime('now')''', (member_id,)).fetchone()[0]
             if overdue > 0:
                 messagebox.showerror("Cannot Borrow", "You have overdue items. Please return them first.")
                 conn.close()
                 return
 
-            # Check max active loans (for non-officers or non-internal use)
             if not is_internal and not self.current_user['IsOfficer']:
                 active_loans = cursor.execute('''SELECT COUNT(*) FROM Borrowings WHERE MemberID = ? AND DateReturned IS NULL''', (member_id,)).fetchone()[0]
                 if active_loans >= 3:
                     messagebox.showerror("Cannot Borrow", "Maximum 3 items can be borrowed at once.")
                     conn.close()
                     return
-            conn.close() # Close after checks
+            conn.close()
             due_date = db.borrow_item(member_id, asset_tag, is_internal)
             
-            # Success message with details
             due_str = "for internal use" if is_internal else f"due {due_date.strftime('%b %d, %Y')}"
             messagebox.showinfo("Success", 
                               f"✅ {asset_tag} has been checked out!\n\n"
                               f"Model: {self.current_selection_data['ModelName']}\n"
                               f"Status: {due_str}")
             
-            # Refresh UI
             self.load_inventory_data()
             self.btn_borrow.configure(state="disabled", fg_color="#252635", text_color="#707080")
             self.update_my_borrowings_panel()
@@ -542,9 +486,6 @@ class GearGrabApp(ctk.CTk):
         except Exception as e:
             messagebox.showerror("System Error", f"An error occurred:\n{str(e)}")
 
-    # ============================================
-    # OTHER FUNCTIONS
-    # ============================================
     def logout(self):
         self.current_user = None
         self.show_login_screen()
@@ -567,15 +508,11 @@ class GearGrabApp(ctk.CTk):
             messagebox.showinfo("Removed", f"{asset_tag} has been removed from inventory.")
             self.load_inventory_data()
 
-    # ============================================
-    # ADD EQUIPMENT FORM (UPDATED)
-    # ============================================
     def open_add_item_window(self):
         """Opens the Add Item window."""
         AddItemWindow(self)
 
 if __name__ == "__main__":
-    # Check if database exists or is empty, and initialize if needed
     if not os.path.exists('geargrab.db') or os.path.getsize('geargrab.db') == 0:
         print("Database not found or empty. Initializing...")
         setup_database()

@@ -33,7 +33,7 @@ CREATE TABLE Inventory_Items (
     AssetTag VARCHAR(255) PRIMARY KEY,
     ModelID INTEGER,
     Status VARCHAR(50) CHECK(Status IN ('Available', 'Borrowed', 'Internal', 'Maintenance', 'Lost')) DEFAULT 'Available',
-    PurchaseDate VARCHAR(50),
+    PurchaseDate DATE, 
     FOREIGN KEY (ModelID) REFERENCES Equipment_Models(ModelID)
 );
 
@@ -52,8 +52,8 @@ CREATE TABLE Borrowings (
     DateOut DATETIME DEFAULT CURRENT_TIMESTAMP,
     DueDate DATETIME,
     DateReturned DATETIME,
-    ReturnCondition VARCHAR(50),
-    PaymentStatus VARCHAR(50) DEFAULT 'N/A', -- 'N/A', 'Unpaid', 'Pending Assessment', 'Resolved'
+    ReturnCondition VARCHAR(50) CHECK (ReturnCondition IN ('Good', 'Damaged', 'Lost')),
+    PaymentStatus VARCHAR(50) DEFAULT 'N/A' CHECK (PaymentStatus IN ('N/A', 'Unpaid', 'Paid')),
     FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
     FOREIGN KEY (AssetTag) REFERENCES Inventory_Items(AssetTag)
 );

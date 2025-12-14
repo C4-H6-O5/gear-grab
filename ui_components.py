@@ -2,6 +2,7 @@ import customtkinter as ctk
 from tkinter import messagebox
 from datetime import datetime
 import sqlite3
+import time
 
 import database as db
 from config import *
@@ -27,21 +28,17 @@ class CleanCard(ctk.CTkFrame):
         }
         status_icon = status_icons.get(self.data['Status'], '●')
 
-        # Left status strip
         status_strip = ctk.CTkFrame(self, fg_color=status_color, corner_radius=12, width=8, border_width=0)
         status_strip.place(x=0, y=0, relheight=1.0)
         
-        # Content frame
         content_frame = ctk.CTkFrame(self, fg_color="transparent")
         content_frame.place(x=15, y=0, relwidth=0.95, relheight=1.0)
         
-        # Status badge
         status_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
         status_frame.pack(anchor="w", pady=(15, 10))
         ctk.CTkLabel(status_frame, text=f"{status_icon} {self.data['Status'].upper()}",
                      font=("Montserrat", 10, "bold"), text_color=status_color).pack(side="left")
         
-        # Model name (truncated)
         model_name = self.data['ModelName']
         if len(model_name) > 25:
             model_name = model_name[:22] + "..."
@@ -49,17 +46,14 @@ class CleanCard(ctk.CTkFrame):
         ctk.CTkLabel(content_frame, text=model_name, font=("Montserrat", 14, "bold"),
                      text_color=COLOR_TEXT_WHITE, anchor="w").pack(anchor="w", pady=(0, 5))
         
-        # Asset tag
         ctk.CTkLabel(content_frame, text=self.data['AssetTag'], font=("Montserrat", 12, "bold"),
                      text_color=COLOR_ACCENT_PRIMARY, anchor="w").pack(anchor="w", pady=(0, 5))
         
-        # Category
         category_name = self.data['CatName']
         category_icon = CATEGORY_ICONS.get(category_name, CATEGORY_ICONS.get("Default", ""))
         ctk.CTkLabel(content_frame, text=f"{category_icon} {category_name}", font=("Montserrat", 11),
                      text_color=COLOR_TEXT_GRAY, anchor="w").pack(anchor="w", pady=(0, 15))
         
-        # Purchase date
         if self.data['PurchaseDate']:
             purchase_year = self.data['PurchaseDate'][:4]
             ctk.CTkLabel(content_frame, text=f"Purchased {purchase_year}", font=("Montserrat", 10),
@@ -102,9 +96,6 @@ class CleanCard(ctk.CTkFrame):
         self.configure(fg_color=COLOR_CARD)
 
 
-# ============================================
-# ADD EQUIPMENT WINDOW
-# ============================================
 class AddItemWindow(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
@@ -118,7 +109,6 @@ class AddItemWindow(ctk.CTkToplevel):
         self._create_widgets()
 
     def _create_widgets(self):
-        # Header
         header = ctk.CTkFrame(self, fg_color=COLOR_CARD, corner_radius=12, height=80)
         header.pack(fill="x", padx=20, pady=20)
         header.pack_propagate(False)
@@ -126,8 +116,7 @@ class AddItemWindow(ctk.CTkToplevel):
         ctk.CTkLabel(header, text="➕ Add New Equipment", font=("Montserrat", 20, "bold"),
                      text_color=COLOR_TEXT_WHITE).pack(side="left", padx=30, pady=20)
         
-        # Form
-        form_frame = ctk.CTkFrame(self, fg_color=COLOR_CARD, corner_radius=12)
+        form_frame = ctk.CTkScrollableFrame(self, fg_color=COLOR_CARD, corner_radius=12)
         form_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         
         models, categories = db.get_models_and_categories()
@@ -165,6 +154,8 @@ class AddItemWindow(ctk.CTkToplevel):
                       font=("Montserrat", 14, "bold"), corner_radius=8,
                       command=self._save_new_item).pack(pady=40)
 
+        self.bind('<Return>', lambda event: self._save_new_item())
+
     def _save_new_item(self):
         try:
             category_name = self.add_item_vars['category'].get()
@@ -189,18 +180,14 @@ class AddItemWindow(ctk.CTkToplevel):
                 return
             
             try:
-                # Check if the model already exists
                 existing_model = cursor.execute("SELECT ModelID FROM Equipment_Models WHERE Name = ?", (model_name,)).fetchone()
                 
                 if existing_model:
                     model_id = existing_model['ModelID']
                 else:
-                    # If the model doesn't exist, create it
                     cursor.execute("INSERT INTO Equipment_Models (CategoryID, Name, ReplacementCost) VALUES (?, ?, ?)",
                                    (category_id, model_name, replacement_cost))
                     model_id = cursor.lastrowid
-                
-                # Add the new inventory item using the model_id
                 cursor.execute("INSERT INTO Inventory_Items (AssetTag, ModelID, Status, PurchaseDate) VALUES (?, ?, 'Available', ?)",
                                (asset_tag, model_id, purchase_date))
                 conn.commit()
@@ -220,9 +207,6 @@ class AddItemWindow(ctk.CTkToplevel):
             messagebox.showerror("Error", f"Failed to add item:\n{str(e)}", parent=self)
 
 
-# ============================================
-# MY BORROWINGS WINDOW
-# ============================================
 class MyBorrowingsWindow(ctk.CTkToplevel):
     def __init__(self, master):
         super().__init__(master)
@@ -245,7 +229,24 @@ class MyBorrowingsWindow(ctk.CTkToplevel):
         list_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
         list_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
 
-        items = db.get_member_borrowings(self.app.current_user['MemberID'])
+        items = []
+        try:
+            conn = db.get_db_connection()
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT b.BorrowID, b.AssetTag, m.Name, b.DueDate, m.ReplacementCost 
+                FROM Borrowings b
+                JOIN Inventory_Items i ON b.AssetTag = i.AssetTag
+                JOIN Equipment_Models m ON i.ModelID = m.ModelID
+                WHERE b.MemberID = ? AND b.DateReturned IS NULL
+            """, (self.app.current_user['MemberID'],))
+            items = [dict(row) for row in cursor.fetchall()]
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to load borrowings: {e}", parent=self)
+        finally:
+            if 'conn' in locals():
+                conn.close()
 
         if not items:
             empty_frame = ctk.CTkFrame(list_frame, fg_color=COLOR_CARD, corner_radius=12, height=100)
@@ -270,10 +271,17 @@ class MyBorrowingsWindow(ctk.CTkToplevel):
                 ctk.CTkLabel(info_frame, text=f"Tag: {item['AssetTag']}", font=("Montserrat", 12),
                              text_color=COLOR_TEXT_GRAY, anchor="w").pack(anchor="w", pady=(2, 0))
                 
-                due_date = datetime.strptime(item['DueDate'][:10], "%Y-%m-%d")
-                is_overdue = due_date < datetime.now()
-                ctk.CTkLabel(info_frame, text=f"Due: {item['DueDate'][:10]}", font=("Montserrat", 12),
-                             text_color=COLOR_WARNING if is_overdue else COLOR_TEXT_GRAY,
+                if item['DueDate']:
+                    due_date = datetime.strptime(item['DueDate'][:10], "%Y-%m-%d")
+                    is_overdue = due_date < datetime.now()
+                    due_text = f"Due: {item['DueDate'][:10]}"
+                    due_color = COLOR_WARNING if is_overdue else COLOR_TEXT_GRAY
+                else:
+                    due_text = "Internal Use"
+                    due_color = COLOR_ACCENT_SECONDARY
+
+                ctk.CTkLabel(info_frame, text=due_text, font=("Montserrat", 12),
+                             text_color=due_color,
                              anchor="w").pack(anchor="w", pady=(2, 5))
                 
                 btn_frame = ctk.CTkFrame(content, fg_color="transparent")
@@ -291,18 +299,11 @@ class MyBorrowingsWindow(ctk.CTkToplevel):
 
     def _on_return_success(self):
         """Callback function to close the borrowings window and refresh the main app."""
-        self.destroy() # Close the 'My Borrowings' window
-        # The main app is now responsible for refreshing its own state
-        # This keeps the component decoupled.
+        self.destroy()
         self.app.load_inventory_data()
 
 
-# ============================================
-# RETURN DIALOG
-# ============================================
 class ReturnDialog(ctk.CTkToplevel):
-    # Making this a nested class of MyBorrowingsWindow for organizational purposes
-    # but it could also be a standalone class.
     def __init__(self, master, app, borrow_id, asset_tag, item_name, replacement_cost, on_success=None):
         super().__init__(master)
         self.app = app
@@ -317,8 +318,8 @@ class ReturnDialog(ctk.CTkToplevel):
         self.geometry("500x450")
         self.configure(fg_color=COLOR_BG)
         self.attributes('-topmost', True)
-        self.transient(master)  # Keep window on top of its parent
-        self.grab_set()         # Modal behavior: block interaction with parent
+        self.transient(master)
+        self.grab_set()
         
         self._create_widgets()
 
@@ -354,36 +355,44 @@ class ReturnDialog(ctk.CTkToplevel):
 
     def _process_return(self):
         condition = self.condition_var.get()
-        db.return_item(self.borrow_id, self.asset_tag, condition)
-
-        # The dialog's job is done. Now, inform the parent about the result.
-        # This avoids the dialog having to know about other windows like PaymentInfoWindow.
+        
+        try:
+            # Retry logic for database lock
+            for attempt in range(3):
+                try:
+                    db.return_item(self.borrow_id, self.asset_tag, condition)
+                    break
+                except sqlite3.OperationalError as e:
+                    if "locked" in str(e) and attempt < 2:
+                        time.sleep(0.2)
+                        continue
+                    raise e
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to return item: {e}", parent=self)
+            return
+            
         self.after(10, lambda: self._safe_close(condition))
 
     def _safe_close(self, condition):
-        # Now, handle post-return actions in the main app context
         if condition == "Lost":
             messagebox.showinfo("Item Marked as Lost",
                               f"❌ {self.asset_tag} has been marked as LOST.\n\n"
                               f"Replacement cost: ₱{float(self.replacement_cost):,.2f}\n"
-                              f"Please contact club officers for payment.", parent=self.parent_window)
+                              f"Please contact club officers for payment.", parent=self)
         elif condition == "Damaged":
             messagebox.showinfo("Item Marked as Damaged",
                               f"🔧 {self.asset_tag} has been moved to MAINTENANCE.\n\n"
-                              f"An officer will assess repair costs.", parent=self.parent_window)
+                              f"An officer will assess repair costs.", parent=self)
         else:
-            messagebox.showinfo("Return Complete", f"✅ {self.asset_tag} has been returned successfully.", parent=self.parent_window)
+            messagebox.showinfo("Return Complete", f"✅ {self.asset_tag} has been returned successfully.", parent=self)
 
-        self.destroy()  # Destroy the dialog itself
+        self.destroy()
         if self.on_success_callback:
-            self.on_success_callback()  # Trigger the parent's cleanup
 
-# Add the nested class to the parent class's namespace so it can be accessed from main.py
+            self.on_success_callback()
+
 MyBorrowingsWindow.ReturnDialog = ReturnDialog
 
-# ============================================
-# PAYMENT INFO WINDOW
-# ============================================
 class PaymentInfoWindow(ctk.CTkToplevel):
     def __init__(self, master, item_name=None, asset_tag=None, replacement_cost=None):
         super().__init__(master)
@@ -406,7 +415,6 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         content_frame = ctk.CTkScrollableFrame(self, fg_color="transparent")
         content_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         
-        # --- Outstanding Payments Section ---
         unpaid_items = db.get_unpaid_borrowings(self.app.current_user['MemberID'])
 
         ctk.CTkLabel(content_frame, text="Outstanding Payments", font=("Montserrat", 18, "bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w", pady=(0, 15))
@@ -421,7 +429,6 @@ class PaymentInfoWindow(ctk.CTkToplevel):
                 card = ctk.CTkFrame(content_frame, fg_color=COLOR_CARD, corner_radius=12)
                 card.pack(fill="x", pady=8)
                 
-                # Card content
                 content = ctk.CTkFrame(card, fg_color="transparent")
                 content.pack(fill="x", padx=20, pady=15)
                 
@@ -431,8 +438,12 @@ class PaymentInfoWindow(ctk.CTkToplevel):
                 status_text = ""
                 cost_text = ""
                 if item['PaymentStatus'] == 'Unpaid':
-                    status_text = "Status: LOST"
-                    cost_text = f"Replacement Cost: ₱{float(item['ReplacementCost']):,.2f}"
+                    if item['ReturnCondition'] == 'Lost':
+                        status_text = "Status: LOST"
+                        cost_text = f"Replacement Cost: ₱{float(item['ReplacementCost']):,.2f}"
+                    elif item['ReturnCondition'] == 'Damaged':
+                        status_text = "Status: DAMAGED"
+                        cost_text = "Repair Cost: Pending Assessment"
                 elif item['PaymentStatus'] == 'Pending Assessment':
                     status_text = "Status: DAMAGED"
                     cost_text = "Repair Cost: Pending Assessment"
@@ -440,14 +451,12 @@ class PaymentInfoWindow(ctk.CTkToplevel):
                 ctk.CTkLabel(content, text=status_text, font=("Montserrat", 12, "bold"), text_color=COLOR_DANGER, anchor="w").pack(anchor="w")
                 ctk.CTkLabel(content, text=cost_text, font=("Montserrat", 12, "bold"), text_color=COLOR_WARNING, anchor="w").pack(anchor="w", pady=(2, 0))
 
-        # Important notice
         notice_frame = ctk.CTkFrame(content_frame, fg_color="#3A0C00", corner_radius=12, border_color="#FF6B6B", border_width=1)
         notice_frame.pack(fill="x", pady=(0, 20))
         ctk.CTkLabel(notice_frame, text="⚠️ Important Notice", font=("Montserrat", 16, "bold"), text_color="#FF6B6B").pack(anchor="w", padx=20, pady=(15, 10))
         notice_text = "According to club policy, you are responsible for lost or damaged equipment. Please follow the procedure below to resolve this matter."
         ctk.CTkLabel(notice_frame, text=notice_text, font=("Montserrat", 13), text_color="#FFD6D6", wraplength=600, justify="left").pack(anchor="w", padx=20, pady=(0, 15))
 
-        # Steps section
         steps_frame = ctk.CTkFrame(content_frame, fg_color=COLOR_CARD, corner_radius=12)
         steps_frame.pack(fill="x", pady=(0, 20))
         ctk.CTkLabel(steps_frame, text="Steps to Resolve", font=("Montserrat", 16, "bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w", padx=20, pady=(15, 10))
@@ -460,7 +469,6 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         for step in steps:
             ctk.CTkLabel(steps_frame, text=step, font=("Montserrat", 13), text_color=COLOR_TEXT_GRAY, wraplength=600, justify="left").pack(anchor="w", padx=35, pady=(0, 8))
 
-        # Contact officers section
         contact_frame = ctk.CTkFrame(content_frame, fg_color=COLOR_CARD, corner_radius=12)
         contact_frame.pack(fill="x", pady=(0, 20))
         ctk.CTkLabel(contact_frame, text="Contact Club Officers", font=("Montserrat", 16, "bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w", padx=20, pady=(15, 10))
@@ -475,7 +483,6 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         else:
             ctk.CTkLabel(contact_frame, text="No officers found in database. Please visit the club room.", font=("Montserrat", 13), text_color=COLOR_TEXT_GRAY).pack(anchor="w", padx=20, pady=(0, 15))
 
-        # Payment methods
         payment_frame = ctk.CTkFrame(content_frame, fg_color=COLOR_CARD, corner_radius=12)
         payment_frame.pack(fill="x", pady=(0, 20))
         ctk.CTkLabel(payment_frame, text="Accepted Payment Methods", font=("Montserrat", 16, "bold"), text_color=COLOR_TEXT_WHITE).pack(anchor="w", padx=20, pady=(15, 10))
@@ -487,14 +494,12 @@ class PaymentInfoWindow(ctk.CTkToplevel):
         for method in methods:
             ctk.CTkLabel(payment_frame, text=method, font=("Montserrat", 13), text_color=COLOR_TEXT_GRAY, justify="left").pack(anchor="w", padx=35, pady=(0, 5))
         
-        # Close button
         close_btn = ctk.CTkButton(self, text="Close Window", width=200, height=40,
                                   fg_color=COLOR_ACCENT_PRIMARY, text_color=COLOR_BG,
                                   font=("Montserrat", 14, "bold"), corner_radius=8,
                                   command=self.destroy)
         close_btn.pack(pady=(10, 20))
         
-        # Footer
         footer_frame = ctk.CTkFrame(self, fg_color=COLOR_CARD, corner_radius=12, height=60)
         footer_frame.pack(fill="x", padx=20, pady=(0, 20))
         footer_frame.pack_propagate(False)
